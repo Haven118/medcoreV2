@@ -615,22 +615,67 @@
             document.getElementById('surgeryOutput').appendChild(div);
         }
 
+        const keywordMap = [
+            // GSW
+            { keys: ['gsw','gunshot','bullet wound','bullet','firearm','entry wound','exit wound','ballistic','ballistic trauma','lodged bullet'], type: 'gswChest' },
+            // Stab / penetrating
+            { keys: ['stab','stabbing','knife wound','knife','puncture wound','penetrat','laceration deep'], type: 'stabAbdomen' },
+            // Head / brain
+            { keys: ['head trauma','skull fracture','blunt head','tbi','concussion'], type: 'gswHead' },
+            { keys: ['brain bleed','brain injury','intracranial','intracranial hemorrhage'], type: 'brainBleed' },
+            // Cardiac
+            { keys: ['cardiac arrest','no pulse','heart attack','arrhythmia'], type: 'cardiacArrest' },
+            { keys: ['tamponade','chest trauma','mi ','myocardial'], type: 'tamponade' },
+            // Chest / lung
+            { keys: ['pneumothorax','collapsed lung','respiratory distress','breathing difficulty','hypoxia','asphyxiation','airway obstruction','drowning','near drowning','submerged','water inhalation','fluid in lungs'], type: 'pneumothorax' },
+            // Blunt / vehicle
+            { keys: ['mvc','car accident','vehicle collision','blunt trauma','impact injury','polytrauma','multiple injuries'], type: 'bluntTrauma' },
+            // Internal bleed
+            { keys: ['internal bleeding','internal bleed','ruptured organ','abdominal trauma','spleen rupture','liver laceration','organ damage','perforation'], type: 'internalBleed' },
+            // Spleen
+            { keys: ['spleen'], type: 'spleen' },
+            // Appendix
+            { keys: ['appendix'], type: 'appendix' },
+            // Fracture
+            { keys: ['fracture','broken bone','compound fracture','dislocation','bone exposed'], type: 'fracture' },
+            // Burns
+            { keys: ['burn','thermal burn','chemical burn','electrical burn','charred'], type: 'burns' },
+            // Overdose
+            { keys: ['overdose','drug overdose','poisoning','tox screen','respiratory depression'], type: 'overdose' },
+            // Hemorrhage / shock - map to internalBleed
+            { keys: ['hemorrhage','blood loss','arterial bleed','severe bleeding','hypovolemic','septic shock','cardiogenic shock','shock'], type: 'internalBleed' },
+        ];
+
+        // Some keywords should also check body location to pick a more specific type
+        const locationRefine = {
+            gswChest: (d) => {
+                if (d.includes('head') || d.includes('brain')) return 'gswHead';
+                if (d.includes('leg') || d.includes('arm') || d.includes('limb')) return 'gswLimb';
+                if (d.includes('abdomen') || d.includes('torso') || d.includes('stomach') || d.includes('belly')) return 'stabAbdomen';
+                if (d.includes('chest') || d.includes('lung')) return 'gswChest';
+                return 'gswChest';
+            },
+            stabAbdomen: (d) => {
+                if (d.includes('chest') || d.includes('lung')) return 'stabChest';
+                return 'stabAbdomen';
+            }
+        };
+
         function getSurgeryType(desc) {
             const d = desc.toLowerCase();
-            const has = w => new RegExp('\\b' + w + '\\b').test(d);
-            if (has('brain') || has('head')) return d.includes('bleed') ? 'brainBleed' : 'gswHead';
-            if (has('heart') || has('cardiac') || has('arrest') || d.includes('no pulse')) return d.includes('arrest') ? 'cardiacArrest' : 'tamponade';
-            if (has('chest') || has('lung') || has('pneumo') || d.includes('collapsed lung')) return d.includes('pneumo') || d.includes('collapsed') ? 'pneumothorax' : d.includes('stab') || d.includes('knife') ? 'stabChest' : 'gswChest';
-            if (has('spleen')) return 'spleen';
-            if (has('appendix')) return 'appendix';
-            if (has('abdomen') || has('torso') || has('bowel') || has('stomach') || has('belly')) return d.includes('internal bleed') ? 'internalBleed' : d.includes('stab') || d.includes('knife') ? 'stabAbdomen' : 'gswChest';
-            if (has('leg') || has('arm') || has('limb') || has('bone') || has('fracture')) return 'gswLimb';
-            if (has('burn')) return 'burns';
-            if (has('blunt') || has('trauma')) return 'bluntTrauma';
-            if (d.includes('internal') && d.includes('bleed')) return 'internalBleed';
-            if (has('overdose') || has('od')) return 'overdose';
-            if (d.includes('gsw') || d.includes('gunshot') || d.includes('shot') || d.includes('bullet')) return 'gswChest';
-            return 'default';
+            for (const entry of keywordMap) {
+                if (entry.keys.some(k => d.includes(k))) {
+                    const refine = locationRefine[entry.type];
+                    return refine ? refine(d) : entry.type;
+                }
+            }
+            // Generic location fallback
+            if (d.includes('head') || d.includes('brain')) return 'gswHead';
+            if (d.includes('chest') || d.includes('lung')) return 'gswChest';
+            if (d.includes('abdomen') || d.includes('torso') || d.includes('belly')) return 'stabAbdomen';
+            if (d.includes('leg') || d.includes('arm') || d.includes('limb')) return 'gswLimb';
+            if (d.includes('heart') || d.includes('cardiac')) return 'tamponade';
+            return 'bluntTrauma';
         }
 
         function generateSurgeryScript() {
