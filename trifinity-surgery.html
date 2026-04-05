@@ -1,0 +1,753 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trifinity Surgery RP Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050505;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #passwordGate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+        #passwordGate.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .title {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        #passwordInput {
+            width: 300px;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-family: 'Inter', monospace;
+        }
+        #passwordInput::placeholder {
+            color: #666;
+        }
+        #enterButton {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #enterButton:hover {
+            transform: scale(1.05);
+        }
+        #accessDenied {
+            color: #ff4444;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            display: none;
+        }
+        #mainContainer {
+            display: none;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        #mainContainer.visible {
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #00d4ff;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+        input::placeholder, textarea::placeholder {
+            color: #666;
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .toggle-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .toggle-btn {
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #00d4ff;
+            background: transparent;
+            color: #00d4ff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #000;
+        }
+        #teamRoles {
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #1a1a1a;
+            margin-bottom: 2rem;
+        }
+        #teamRoles.visible {
+            display: block;
+        }
+        .role-checkbox {
+            display: block;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+        }
+        .role-checkbox input {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+        #generateButton {
+            width: 100%;
+            padding: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            cursor: pointer;
+            margin-bottom: 2rem;
+            transition: transform 0.2s;
+        }
+        #generateButton:hover {
+            transform: scale(1.02);
+        }
+        #surgeryOutput {
+            max-height: 70vh;
+            overflow-y: auto;
+            background: #0f0f0f;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            line-height: 1.6;
+            font-family: 'Inter', monospace;
+        }
+        .phase-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .or-opening { background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); }
+        .phase-1 { background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); }
+        .phase-2 { background: linear-gradient(135deg, #4488ff 0%, #3366cc 100%); }
+        .phase-3 { background: linear-gradient(135deg, #ffaa00 0%, #cc8800 100%); }
+        .phase-4 { background: linear-gradient(135deg, #ff4444 0%, #cc3333 100%); }
+        .phase-5 { background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); }
+        .phase-6 { background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); }
+        .rp-line {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-left: 4px solid #666;
+            border-radius: 0 8px 8px 0;
+            background: rgba(255,255,255,0.05);
+        }
+        .rp-say { border-left-color: #00ff88; }
+        .rp-do { border-left-color: #4488ff; }
+        .rp-radio { border-left-color: #ffaa00; }
+        .rp-anesthetist { border-left-color: #aa44ff; }
+        .rp-complication { background: rgba(255,68,68,0.2); border-left-color: #ff4444; font-weight: 500; }
+        @media (max-width: 768px) {
+            .title { font-size: 2rem; }
+            #mainContainer { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="passwordGate">
+        <h1 class="title">Trifinity Surgery RP Generator</h1>
+        <p class="subtitle">Authorized Personnel Only</p>
+        <input type="password" id="passwordInput" placeholder="Enter password">
+        <button id="enterButton" onclick="checkPassword()">Enter OR</button>
+        <div id="accessDenied">Access Denied - Doctors Only</div>
+    </div>
+
+    <div id="mainContainer">
+        <div class="input-group">
+            <label for="surgeonName">Lead Surgeon Name</label>
+            <input type="text" id="surgeonName" placeholder="Lead Surgeon name">
+        </div>
+
+        <div class="input-group">
+            <label for="assistingDoctors">Assisting Doctors</label>
+            <input type="text" id="assistingDoctors" placeholder="Assisting doctors (leave blank if solo)">
+        </div>
+
+        <div class="input-group">
+            <label for="surgeryPatient">Patient Name</label>
+            <input type="text" id="surgeryPatient" placeholder="Patient name">
+        </div>
+
+        <div class="input-group">
+            <label for="surgeryDesc">Surgery Description</label>
+            <textarea id="surgeryDesc" placeholder="Describe what EMS reported and what you see on arrival"></textarea>
+        </div>
+
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="soloToggle" onclick="toggleMode('solo')">Solo</button>
+            <button class="toggle-btn" id="teamToggle" onclick="toggleMode('team')">Team</button>
+        </div>
+
+        <div id="teamRoles">
+            <div class="role-checkbox">
+                <input type="checkbox" id="roleAnest">
+                <label for="roleAnest">Anesthetist</label>
+            </div>
+            <div class="role-checkbox">
+                <input type="checkbox" id="roleNurse">
+                <label for="roleNurse">Scrub Nurse</label>
+            </div>
+            <div class="role-checkbox">
+                <input type="checkbox" id="roleCirc">
+                <label for="roleCirc">Circulating Nurse</label>
+            </div>
+            <div class="role-checkbox">
+                <input type="checkbox" id="roleAssist">
+                <label for="roleAssist">Assistant Surgeon</label>
+            </div>
+            <div class="role-checkbox">
+                <input type="checkbox" id="roleEMS">
+                <label for="roleEMS">EMS</label>
+            </div>
+        </div>
+
+        <button id="generateButton" onclick="generateSurgeryScript()">Generate Surgery RP Script</button>
+
+        <div id="surgeryOutput"></div>
+    </div>
+
+    <script>
+        const PASSWORD = 'XRay2025';
+        let currentMode = 'solo';
+        let assistIndex = 0;
+        const assistLines = [
+            "Hold that retractor steady - do not let it slip.",
+            "Suction here - I need to see what I am working with.",
+            "Watch what I am doing here - this is how you control a bleeder.",
+            "Keep that tissue pulled back - I need both hands free.",
+            "Good - now hold that position and do not move.",
+            "Pass me the clamp - slowly, do not rush.",
+            "You see that? That is what we were looking for. Stay focused.",
+            "I need more light on this side - adjust the overhead lamp.",
+            "Do not touch that - let me handle it. Just keep suctioning.",
+            "Good work. Stay with me - we are not done yet."
+        ];
+
+        const surgerySteps = {
+            gswChest: [
+                "/me makes an incision on the side of the chest between the ribs",
+                "There is a lot of blood in the chest cavity - suction, keep it clear so I can see",
+                "/me clamps the main blood vessels going to the lung to control the bleeding",
+                "I can see the bullet track - the lung has been torn. I am going to repair it now.",
+                "/me stitches the lung tear closed with continuous stitching",
+                "Checking for any air leaks - hold still everyone",
+                "/me tests the repair by filling the chest with fluid and watching for bubbles",
+                "Repair is holding. No leaks. We are in good shape.",
+                "/me places a drain tube in the chest to remove any remaining fluid"
+            ],
+            gswHead: [
+                "/me shaves and cleans the area on the skull where the bullet entered",
+                "I am drilling into the skull now to reach the brain - everyone stay quiet",
+                "/me carefully drills through the skull using a surgical drill",
+                "There is a large blood clot pressing on the brain - I am removing it now",
+                "/me carefully removes the blood clot using a suction tool",
+                "Brain pressure is dropping - that is exactly what we want to see",
+                "/me checks the area thoroughly for any remaining bleeding",
+                "No more active bleeding. Placing a drain tube to remove any fluid that builds up.",
+                "/me stitches the brain lining closed and secures the skull piece back in place"
+            ],
+            gswLimb: [
+                "/me applies a tourniquet to the upper part of the limb to stop blood flow",
+                "Making an incision to expose the damaged artery - there is significant damage here",
+                "/me carefully exposes the damaged blood vessel",
+                "The bullet went straight through the artery - I am clamping both ends now",
+                "/me clamps the artery on both sides of the damage to stop the bleeding",
+                "Repairing the artery with a patch - this will restore blood flow to the limb",
+                "/me repairs the damaged artery carefully",
+                "Checking pulse below the repair - blood is flowing again. Good.",
+                "/me cuts open the muscle casing to relieve pressure and applies special vacuum dressing"
+            ],
+            stabAbdomen: [
+                "/me makes a large incision down the middle of the abdomen",
+                "There is a hole in the bowel - contents have spilled inside. This is serious.",
+                "/me clamps both sides of the bowel hole to stop further spillage",
+                "I am cutting out the damaged section of bowel and reconnecting the healthy ends",
+                "/me removes the damaged bowel section and reconnects the healthy ends with a surgical stapler",
+                "Washing out the inside of the abdomen with antiseptic wash - we need to clear the contamination",
+                "/me thoroughly washes the abdominal cavity with warm antiseptic solution",
+                "Placing drainage tubes to remove any fluid that builds up after surgery",
+                "/me places drainage tubes and checks all organs for any missed injuries"
+            ],
+            stabChest: [
+                "/me makes an incision between the ribs on the left side of the chest",
+                "The lung has been cut by the blade - it is bleeding steadily",
+                "/me clamps the blood vessels going to the lung",
+                "Stitching the lung cut closed - slow and careful",
+                "/me stitches the lung wound closed with continuous stitching",
+                "Inserting a chest drain tube to remove blood and air from the chest",
+                "/me inserts a chest drain tube and secures it in place",
+                "Lung is re-expanding - that is what we want to see",
+                "/me stitches the ribs back together and closes the chest in layers"
+            ],
+            tamponade: [
+                "/me cuts down the middle of the chest with a surgical saw",
+                "The sac around the heart is full of blood - it is squeezing the heart. Opening it now.",
+                "/me carefully opens the sac around the heart - blood releases immediately",
+                "I can see the tear on the heart wall - applying reinforced stitches now",
+                "/me stitches the heart wall tear closed with reinforced stitches",
+                "Heart is beating strongly now - the repair is holding",
+                "/me checks all around the heart for any other injuries",
+                "Leaving the heart sac partially open with a drain so fluid cannot build up again",
+                "/me places a drain and begins closing the chest"
+            ],
+            cardiacArrest: [
+                "/me makes an emergency incision on the left side of the chest",
+                "No heartbeat - I am massaging the heart directly with my hand. Keep counting with me.",
+                "/me compresses the heart rhythmically with both hands",
+                "Shocking the heart directly with paddles - 30 joules - CLEAR",
+                "/me applies internal defibrillator paddles directly to the heart",
+                "Heartbeat restored - weak but it is there. Keep those fluids running.",
+                "/me checks inside the chest for the cause of the arrest",
+                "Found the cause - addressing it now. Stay focused everyone.",
+                "/me repairs the source and stabilises the heart rhythm"
+            ],
+            pneumothorax: [
+                "/me inserts a chest drain tube between the ribs",
+                "Air and blood releasing - lung starting to re-expand",
+                "/me secures the drain tube and connects it to suction",
+                "The lung is not fully expanding - there is a tear in the airway inside the chest. Going in.",
+                "/me makes an incision to open the chest and locate the airway tear",
+                "Found the tear - stitching it closed now",
+                "/me stitches the airway tear closed carefully",
+                "Placing a second drain tube at the top of the chest to remove remaining air",
+                "/me places the second drain and closes the chest in layers"
+            ],
+            bluntTrauma: [
+                "/me makes a large incision down the middle of the abdomen",
+                "The spleen is severely torn and bleeding heavily - I need to remove it",
+                "/me clamps the main artery feeding the spleen",
+                "Removing the spleen now - using a surgical stapler to seal the blood vessels",
+                "/me removes the spleen and seals all blood vessels with a surgical stapler",
+                "Checking the liver - there is some bruising but no major tears",
+                "/me packs the liver area with surgical gauze to control any oozing",
+                "Placing drainage tubes in the abdomen - checking for any missed injuries",
+                "/me does a full inspection of all organs before closing"
+            ],
+            spleen: [
+                "/me makes an incision in the upper left side of the abdomen",
+                "The spleen has multiple tears across the surface - it cannot be saved",
+                "/me carefully separates the tissue connecting the spleen to the colon and kidney",
+                "Tying off the small blood vessels near the stomach - carefully",
+                "/me ties off all blood vessels feeding the spleen one by one",
+                "Removing the spleen now - it is coming out intact",
+                "/me removes the spleen and places it in a specimen bag",
+                "Washing out the area and checking everything is clean",
+                "/me irrigates the area and checks surrounding organs are undamaged"
+            ],
+            internalBleed: [
+                "/me makes a large incision down the middle of the abdomen",
+                "There is bleeding coming from multiple areas - packing all four sections of the abdomen now",
+                "/me packs all four sections of the abdomen with surgical gauze to control bleeding",
+                "Found the main source - the blood supply to the intestines has been torn",
+                "/me carefully repairs the torn blood supply with continuous stitching",
+                "Bleeding is under control - checking the rest of the abdomen for missed injuries",
+                "/me does a systematic check of every organ in the abdomen",
+                "Placing drainage tubes in the back of the abdominal cavity",
+                "/me places drainage tubes and prepares to close"
+            ],
+            brainBleed: [
+                "/me shaves and cleans the area on the front of the skull",
+                "Drilling into the front of the skull now - everyone stay still",
+                "/me carefully drills through the skull to access the brain",
+                "Blood pooling under the skull - urgent. Removing it now.",
+                "/me carefully removes the blood clot using a suction tool",
+                "Brain pressure dropping - that is what we want. Keep monitoring.",
+                "/me checks the entire area for any remaining bleeding sources",
+                "Placing a drain tube to remove any fluid that builds up after surgery",
+                "/me stitches the brain lining closed and secures the skull"
+            ],
+            burns: [
+                "/me carefully cuts away all the dead burned skin down to healthy tissue",
+                "The burns are severe - going all the way down to the muscle in some areas",
+                "/me removes all dead tissue methodically across the burn area",
+                "Applying temporary skin covering to protect the wound while it heals",
+                "/me applies temporary skin covering sheets across the wound",
+                "Applying special vacuum dressings to help the wound heal faster",
+                "/me applies vacuum dressings and secures them in place",
+                "Writing up the dressing change schedule - every 48 hours",
+                "/me documents the burn coverage and plans follow-up skin graft procedure"
+            ],
+            fracture: [
+                "/me applies a tourniquet to the upper leg to stop blood flow to the area",
+                "The bone is severely shattered just above the knee - this is a complex repair",
+                "/me carefully realigns the bone fragments into the correct position",
+                "Applying a metal plate along the bone to hold everything together",
+                "/me positions the metal plate and begins inserting screws",
+                "Screws secured on both sides of the break - the plate is holding well",
+                "/me confirms all screws are tight and the bone is properly aligned",
+                "Releasing the tourniquet now - checking blood flow to the leg",
+                "/me applies clotting agent to stop any remaining bleeding and closes in layers"
+            ],
+            appendix: [
+                "/me makes an incision on the lower right side of the abdomen",
+                "The appendix has burst - there is infected material inside the abdomen",
+                "/me carefully clears the infected tissue around the appendix",
+                "Tying off the blood supply to the appendix now",
+                "/me ties off the blood supply to the appendix",
+                "Removing the appendix - using a surgical tie to seal the base",
+                "/me removes the appendix and seals the base with a surgical tie",
+                "Washing out the abdomen with antiseptic wash - need to clear the infection",
+                "/me thoroughly washes the abdominal cavity and places a drainage tube"
+            ],
+            overdose: [
+                "/me inserts a tube through the mouth into the stomach",
+                "Washing out the stomach now - removing as much of the substance as possible",
+                "/me performs a full stomach wash using the tube",
+                "Administering activated charcoal to absorb any remaining toxins",
+                "/me administers activated charcoal through the tube",
+                "Doing a camera check to confirm there is no damage to the throat or stomach lining",
+                "/me performs a camera check of the throat and stomach",
+                "No structural damage - the organs are stressed but intact. Stabilising now.",
+                "/me monitors organ function and adjusts medication drip accordingly"
+            ],
+            default: [
+                "/me makes a large incision down the middle of the abdomen",
+                "Doing a full inspection - checking every section systematically",
+                "/me inspects all four sections of the abdomen carefully",
+                "Found the source - controlling it now",
+                "/me controls the bleeding source and packs the area",
+                "Checking all surrounding organs for any missed damage",
+                "/me does a thorough check of all organs",
+                "Placing drainage tubes - we are almost ready to close",
+                "/me places drainage tubes and prepares for closure"
+            ]
+        };
+
+        const complications = [
+            {
+                desc: "Unexpected deep bleeder found - not visible on imaging",
+                response: "Clamping now - do not let that pressure drop. Push fluids.",
+                steps: [
+                    "/me locates the source of the bleed and applies a vascular clamp",
+                    "Got it - vessel is clamped. Suction the field so I can see the repair site.",
+                    "/me stitches the damaged vessel closed with fine suture",
+                    "Bleeding is controlled. Releasing the clamp slowly - watching for any re-bleed.",
+                    "/me confirms haemostasis and packs the area with surgical gauze"
+                ]
+            },
+            {
+                desc: "BP crashing - patient going into shock",
+                response: "Push the vasopressors now. I am not stopping - keep that pressure up.",
+                steps: [
+                    "/me works faster, prioritising the most critical repair",
+                    "Two units of O-neg - now. Do not wait for a cross-match.",
+                    "/me calls for the rapid infuser and continues operating",
+                    "BP coming up - keep those fluids running. Do not let it drop again.",
+                    "/me stabilises the repair and monitors response to transfusion"
+                ]
+            },
+            {
+                desc: "Lung not re-expanding - tension pneumothorax developing",
+                response: "Needle decompression - left side, second intercostal space. Move.",
+                steps: [
+                    "/me inserts a large bore needle into the chest to release trapped air",
+                    "Air releasing - good. Now get a chest drain in immediately.",
+                    "/me inserts a chest drain tube and connects it to suction",
+                    "Lung is starting to re-expand. O2 sats coming back up.",
+                    "/me confirms lung expansion and secures the drain in place"
+                ]
+            },
+            {
+                desc: "Instrument count is wrong - something may be left inside",
+                response: "Nobody closes until we find it. Check the entire field again right now.",
+                steps: [
+                    "/me systematically searches every section of the operative field",
+                    "Check under the drapes, check the floor, check the back table - everything.",
+                    "/me calls for an intraoperative X-ray to locate the missing instrument",
+                    "There - found it. Removing it now.",
+                    "/me removes the instrument and confirms the count is correct before closing"
+                ]
+            },
+            {
+                desc: "Heart going into ventricular fibrillation on the table",
+                response: "Charging the paddles - 200 joules - CLEAR! Everyone off the table. Now.",
+                steps: [
+                    "/me applies defibrillator paddles to the chest and delivers a shock",
+                    "No conversion - charging again. 360 joules. CLEAR.",
+                    "/me delivers a second shock and immediately resumes CPR",
+                    "Rhythm restored - sinus rhythm on the monitor. Keep watching it.",
+                    "/me administers anti-arrhythmic medication and continues the procedure"
+                ]
+            },
+            {
+                desc: "Bowel contents spilling into the body cavity",
+                response: "Clamp both ends immediately. Start the antiseptic wash. Antibiotics now.",
+                steps: [
+                    "/me clamps the bowel on both sides of the perforation to stop further spillage",
+                    "Irrigating the entire cavity with warm antiseptic solution - we need to clear all of this.",
+                    "/me performs a thorough washout of the abdominal cavity",
+                    "Resecting the damaged bowel segment and stapling the healthy ends together.",
+                    "/me completes the bowel repair and places additional drainage tubes before closing"
+                ]
+            }
+        ];
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === PASSWORD) {
+                document.getElementById('passwordGate').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('passwordGate').style.display = 'none';
+                    document.getElementById('mainContainer').classList.add('visible');
+                }, 500);
+            } else {
+                document.getElementById('accessDenied').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('accessDenied').style.display = 'none';
+                }, 3000);
+            }
+        }        function toggleMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + 'Toggle').classList.add('active');
+            const teamRoles = document.getElementById('teamRoles');
+            if (mode === 'team') {
+                teamRoles.classList.add('visible');
+            } else {
+                teamRoles.classList.remove('visible');
+            }
+        }
+
+        const phaseNames = {
+            'or-opening': '🏥 OR OPENING',
+            'phase-1': '📋 PHASE 1 - PATIENT ARRIVAL',
+            'phase-2': '🔬 PHASE 2 - IMAGING & ASSESSMENT',
+            'phase-3': '⚙️ PHASE 3 - OR PREP & ANAESTHESIA',
+            'phase-4': '🔪 PHASE 4 - SURGERY',
+            'phase-5': '🧵 PHASE 5 - CLOSING',
+            'phase-6': '💊 PHASE 6 - POST-OP & RECOVERY'
+        };
+
+        function addHeader(key) {
+            const header = document.createElement('div');
+            header.className = `phase-header ${key}`;
+            header.textContent = phaseNames[key] || key.toUpperCase();
+            document.getElementById('surgeryOutput').appendChild(header);
+        }
+
+        function addLine(type, text) {
+            const div = document.createElement('div');
+            div.className = `rp-line rp-${type}`;
+            div.innerHTML = text;
+            document.getElementById('surgeryOutput').appendChild(div);
+        }
+
+        function getSurgeryType(desc) {
+            const d = desc.toLowerCase();
+            const has = w => new RegExp('\\b' + w + '\\b').test(d);
+            if (has('brain') || has('head')) return d.includes('bleed') ? 'brainBleed' : 'gswHead';
+            if (has('heart') || has('cardiac') || has('arrest') || d.includes('no pulse')) return d.includes('arrest') ? 'cardiacArrest' : 'tamponade';
+            if (has('chest') || has('lung') || has('pneumo') || d.includes('collapsed lung')) return d.includes('pneumo') || d.includes('collapsed') ? 'pneumothorax' : d.includes('stab') || d.includes('knife') ? 'stabChest' : 'gswChest';
+            if (has('spleen')) return 'spleen';
+            if (has('appendix')) return 'appendix';
+            if (has('abdomen') || has('torso') || has('bowel') || has('stomach') || has('belly')) return d.includes('internal bleed') ? 'internalBleed' : d.includes('stab') || d.includes('knife') ? 'stabAbdomen' : 'gswChest';
+            if (has('leg') || has('arm') || has('limb') || has('bone') || has('fracture')) return 'gswLimb';
+            if (has('burn')) return 'burns';
+            if (has('blunt') || has('trauma')) return 'bluntTrauma';
+            if (d.includes('internal') && d.includes('bleed')) return 'internalBleed';
+            if (has('overdose') || has('od')) return 'overdose';
+            if (d.includes('gsw') || d.includes('gunshot') || d.includes('shot') || d.includes('bullet')) return 'gswChest';
+            return 'default';
+        }
+
+        function generateSurgeryScript() {
+            const surgeonName = document.getElementById('surgeonName').value || 'Dr. X';
+            const assistingDoctors = document.getElementById('assistingDoctors').value.trim();
+            const patient = document.getElementById('surgeryPatient').value || 'the patient';
+            const desc = document.getElementById('surgeryDesc').value || 'gunshot wound';
+            const surgeryType = getSurgeryType(desc);
+            const surgeryName = surgeryType.toUpperCase().replace(/([A-Z])/g, ' $1').trim();
+            const steps = surgerySteps[surgeryType] || surgerySteps.default;
+            const isCritical = Math.random() < 0.5;
+            const vitals = isCritical ? 'critical: BP 70/40 HR 140 - this patient is crashing' : 'stable: BP 110/70 HR 88 - stable for now';
+            const anesthetistVitals = isCritical ? 'BP dropping - pushing fluids now, blood supply ready' : 'BP stable - fluids running, keep going Doctor';
+            const hasTeam = currentMode === 'team' && (document.getElementById('roleAnest').checked || document.getElementById('roleNurse').checked || document.getElementById('roleCirc').checked || document.getElementById('roleAssist').checked || document.getElementById('roleEMS').checked);
+            const randomComplication = complications[Math.floor(Math.random() * complications.length)];
+
+            document.getElementById('surgeryOutput').innerHTML = '';
+
+            // OR OPENING
+            addHeader('or-opening');
+            addLine('radio', `[RADIO] "Attention all staff - OR is now open. Lead Surgeon: ${surgeonName}. ${assistingDoctors ? 'Assisting: ' + assistingDoctors + '.' : ''} Procedure: ${surgeryName}. Patient: ${patient}. Clear non-essential personnel."`);
+            addLine('say', `[SAY] "This is Doctor ${surgeonName}. I am the lead on this case. Everyone in this room answers to me until I say this surgery is done. Is that understood?"`);
+            addLine('do', '/me looks around the OR confirming all staff are in position');
+            if (assistingDoctors) {
+                addLine('say', `[SAY to assistingDoctors] "You are assisting me today. Every cut, every clamp - you wait for my instruction. Understood?"`);
+                addLine('say', `[SAY to assistingDoctors] "Your job is to retract when I ask and suction when I ask. Nothing else."`);
+            }
+
+            // PHASE 1 - ARRIVAL
+            addHeader('phase-1');
+            addLine('radio', '[RADIO] "X-Ray to dispatch, patient arriving, stand by for assessment."');
+            addLine('say', '"EMS - what happened? Where is the injury? How long have they been down?"');
+            addLine('do', '/me performs rapid assessment - checks airway, breathing, pulse and wound sites');
+            addLine('say', `"Vitals are [${vitals}]."`);
+            addLine('do', '/me calls for a gurney and moves patient inside immediately');
+
+            // PHASE 2 - IMAGING
+            addHeader('phase-2');
+            addLine('say', '"I am sending this patient to X-Ray and CT before we go to OR - I need to see exactly what we are dealing with."');
+            addLine('do', '/me wheels patient to the imaging room');
+            addLine('do', '/me reviews the X-Ray and CT scan results carefully');
+            addLine('say', `"Based on imaging, this patient needs a ${surgeryName}. Here is what I am seeing: ${desc.substring(0, 60)}..."`);
+            addLine('say', '"Prep the OR. We are going in."');
+
+            // PHASE 3 - OR PREP
+            addHeader('phase-3');
+            addLine('radio', `[RADIO] "X-Ray to all staff - OR is being prepped. Surgery imminent on ${patient}."`);
+            addLine('do', '/me scrubs hands thoroughly, gowns up and puts gloves on');
+            addLine('do', '/me enters the OR and takes position at the head of the table');
+            if (hasTeam && document.getElementById('roleAnest').checked) addLine('say', `"[SAY to Anesthetist] "I need continuous vitals every 60 seconds - BP, HR, O2. Do not stop calling them until I say close.""`);
+            if (hasTeam && document.getElementById('roleNurse').checked) addLine('say', `"[SAY to Scrub Nurse] "Instruments on my call only. Sponge count before and after - every single piece accounted for.""`);
+            if (hasTeam && document.getElementById('roleCirc').checked) addLine('say', `"[SAY to Circulating Nurse] "Document everything in real time. Blood products on standby - O-neg ready. You move the moment I call.""`);
+            if (hasTeam && document.getElementById('roleAssist').checked) addLine('say', `"[SAY to Assistant Surgeon] "You retract and suction on my command. You do not cut, you do not clamp without my instruction.""`);
+            if (hasTeam && document.getElementById('roleEMS').checked) addLine('radio', `"[RADIO to EMS] "Patient is in OR. You are clear. Stand by for updates.""`);
+            addLine('say', `"${patient}, I need you to count back from 10 for me."`);
+            addLine('anesthetist', '"Patient is under. BP stable. ET tube confirmed. Ready when you are, Doctor."');
+            addLine('do', '/me drapes the patient and confirms instrument count with the scrub nurse');
+            addLine('say', '"Scalpel."');
+
+            // PHASE 4 - SURGERY
+            addHeader('phase-4');
+            let stepCount = 0;
+            steps.forEach((step, index) => {
+                stepCount++;
+                if (step.startsWith('/me')) {
+                    addLine('do', step);
+                } else {
+                    addLine('say', `"${step}"`);
+                }
+                if (stepCount % 3 === 0 && assistingDoctors) {
+                    const line = `[SAY to assistingDoctors] "${assistLines[assistIndex % assistLines.length]}"`;
+                    addLine('say', line);
+                    assistIndex++;
+                }
+                if (index === Math.floor(steps.length / 2)) {
+                    addLine('anesthetist', `[ANESTHETIST] "${anesthetistVitals}"`);
+                    addLine('complication', `⚠️ [COMPLICATION] ${randomComplication.desc}`);
+                    addLine('say', `"${randomComplication.response}"`);
+                    randomComplication.steps.forEach(s => {
+                        if (s.startsWith('/me')) addLine('do', s);
+                        else addLine('say', `"${s}"`);
+                    });
+                    addLine('complication', `✅ [COMPLICATION RESOLVED] Continuing procedure.`);
+                }
+            });
+
+            // PHASE 5 - CLOSING
+            addHeader('phase-5');
+            addLine('say', '"Closing now - stitching the deep layers first, then the middle layer, then stapling the skin."');
+            addLine('do', '/me closes the wound in layers carefully');
+            addLine('say', '"Checking one final time - no bleeding, no missed instruments, everything looks clean."');
+            addLine('do', '/me applies a sterile dressing to the wound');
+            addLine('say', '"Patient is stable. Surgery is complete. Moving to recovery."');
+            if (assistingDoctors) {
+                addLine('say', `[SAY to assistingDoctors] "Watch how I close this - you will need to know this one day."`);
+                addLine('say', `[SAY to assistingDoctors] "Good assist today. Write up your notes on this case."`);
+            }
+            addLine('do', '/me removes draping and prepares patient for transfer');
+
+            // PHASE 6 - POST-OP
+            addHeader('phase-6');
+            addLine('do', '/me moves patient carefully from the OR table to the recovery bed');
+            addLine('say', '"Surgery is done. Patient is stable. Moving to recovery now."');
+            addLine('anesthetist', '"Anaesthetic is wearing off - patient will be responsive shortly"');
+            addLine('say', '"I am writing the post-op care plan now. No food or water until I clear it."');
+            addLine('do', '/me writes post-op prescription - pain medication and antibiotics');
+            addLine('say', '"Nurse - monitor vitals every few minutes. Any change, you call me directly."');
+            addLine('do', '/me files the full surgical report and hands over to the recovery nurse');
+            addLine('radio', `"[RADIO] "X-Ray to dispatch - surgery complete on ${patient}. Patient stable and in recovery.""`);
+            addLine('say', '"Family can be told the surgery went well. Patient needs rest - no visitors until I say so."');
+            if (assistingDoctors) {
+                addLine('say', `[SAY to assistingDoctors] "Check on the patient in 10 minutes and report back to me directly."`);
+            }
+            addLine('say', '"Total for today\'s procedure is $25,000. Prescription will be at the front desk."');
+
+            document.getElementById('surgeryOutput').scrollTop = 0;
+        }
+    </script>
+</body>
+</html>
